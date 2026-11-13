@@ -53,3 +53,8 @@ Makefile
 /doc/*.toc
 /doc/*.tp
 /doc/*.vr
+
+# Asciiverse packaging (asciiverse/package.sh)
+/out
+/stage
+/dist

@@ -1,0 +1,46 @@
+# System packages (.deb, .rpm, .apk, Arch) for GNU Shogi, built by nfpm
+# from the same static binary as the av archive. The release workflow sets
+# VERSION, RELEASE (our packaging release) and ARCH (amd64 or arm64), and
+# leaves the binary at out/gnushogi/gnushogi.
+#
+# The opening book goes to /usr/share/gnushogi, the folder compiled in.
+# The command is upstream's: plain `gnushogi` starts the text interface
+# for XBoard and other front ends, `gnushogi -C` the curses display. No
+# .desktop file on purpose: av is the one place titles are started from
+# (asciiverse/CLAUDE.md).
+name: gnushogi
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+release: ${RELEASE}
+section: games
+priority: optional
+maintainer: Asciiverse <packages@asciiverse.sh>
+vendor: Asciiverse
+homepage: https://github.com/theasciiverse/gnushogi
+license: GPL-3.0-or-later
+description: |
+  Shogi (Japanese chess) against the computer.
+  GNU Shogi plays shogi with an opening book and a tunable search, in a
+  curses display (gnushogi -C) or as an engine for XBoard. By Matthias
+  Mutz, Mike Vanier, Luis Felipe Strano Moraes and Yann Dirson, after
+  GNU Chess; packaged by Asciiverse.
+contents:
+  - src: out/gnushogi/gnushogi
+    dst: /usr/bin/gnushogi
+    file_info: { mode: 0755 }
+  - src: misc/gnushogi.tbk
+    dst: /usr/share/gnushogi/gnushogi.tbk
+    file_info: { mode: 0644 }
+  - src: doc/gnushogi.6
+    dst: /usr/share/man/man6/gnushogi.6
+    file_info: { mode: 0644 }
+  - src: COPYING
+    dst: /usr/share/doc/gnushogi/copyright
+    file_info: { mode: 0644 }
+  - src: README
+    dst: /usr/share/doc/gnushogi/README
+    file_info: { mode: 0644 }
+  - src: PATCHES.md
+    dst: /usr/share/doc/gnushogi/PATCHES.md
+    file_info: { mode: 0644 }
