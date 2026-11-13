@@ -103,7 +103,12 @@
  */
 
 /* #define QUIETBOOKGEN */
+#ifdef AV_PATHS
+/* Asciiverse: nothing printed over the curses screen at first start */
+#define QUIETBOOKGEN
+#else
 #undef  QUIETBOOKGEN
+#endif
 
 
 /*

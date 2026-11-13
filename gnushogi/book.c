@@ -695,8 +695,10 @@ GetOpenings(void)
             DATA.hint = 0;
             DATA.count = 0;
             WriteAdmin();
+#if !defined QUIETBOOKGEN
             printf("creating bookfile %s %ld %ld\n",
                     binbookfile, B.maxoffset, B.booksize);
+#endif
 
             for (x = 0; x < B.booksize; x++)
             {
@@ -791,6 +793,7 @@ GetOpenings(void)
                             {
                                 B.bookcount++;
 
+#if !defined QUIETBOOKGEN
                                 if ((B.bookcount % 1000) == 0)
                                 {
                                     /* CHECKME: may want to get rid of this,
@@ -799,6 +802,7 @@ GetOpenings(void)
                                            "processed\n",
                                            B.bookcount, games);
                                 }
+#endif
 
                                 /* initialize a record */
                                 DATA.hashbd = bhashbd;

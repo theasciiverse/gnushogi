@@ -35,6 +35,162 @@
 #include <signal.h>
 
 
+#ifdef AV_PATHS
+/*
+ * Asciiverse: where the opening book and the player's files live, for a
+ * program installed anywhere (see PATCHES.md).
+ *
+ * The text book is read from the path compiled in (BOOK), else from the
+ * program's own folder. The binary book, which GNU Shogi writes, goes to
+ * the player's state folder. When the program is started from its own
+ * folder, as av starts it, it moves into the state folder, so games
+ * saved with "save" and "list" land there instead of beside the program.
+ */
+#include <errno.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#if defined(__APPLE__)
+#  include <mach-o/dyld.h>
+#elif defined(_WIN32)
+#  include <direct.h>
+#  define mkdir(p, m) _mkdir(p)
+#endif
+
+static int av_book_given, av_binbook_given;
+static char av_bookpath[MAXPATHLEN];
+static char av_binbookpath[MAXPATHLEN];
+
+/* The folder the running program is in, or "" if it cannot be found. */
+static void
+av_exe_dir(char *dir, size_t n)
+{
+    char *slash;
+
+    dir[0] = '\0';
+#if defined(__APPLE__)
+    {
+        uint32_t size = (uint32_t)n;
+        if (_NSGetExecutablePath(dir, &size) != 0)
+            dir[0] = '\0';
+    }
+#elif defined(_WIN32)
+    if (GetModuleFileNameA(NULL, dir, (DWORD)n) == 0)
+        dir[0] = '\0';
+#else
+    {
+        ssize_t len = readlink("/proc/self/exe", dir, n - 1);
+        dir[len > 0 ? len : 0] = '\0';
+    }
+#endif
+    slash = strrchr(dir, '/');
+#ifdef _WIN32
+    if (strrchr(dir, '\\') > slash)
+        slash = strrchr(dir, '\\');
+#endif
+    if (slash)
+        *slash = '\0';
+    else
+        dir[0] = '\0';
+}
+
+/* Make each folder of path that is missing. */
+static void
+av_mkdirs(char *path)
+{
+    char *p;
+
+    for (p = path + 1; *p; p++) {
+        if (*p == '/' || *p == '\\') {
+            char c = *p;
+            *p = '\0';
+            mkdir(path, 0755);
+            *p = c;
+        }
+    }
+    mkdir(path, 0755);
+}
+
+/* The player's state folder for GNU Shogi, made if missing; "" if no
+ * home folder is known. */
+static void
+av_state_dir(char *dir, size_t n)
+{
+    const char *base;
+
+    dir[0] = '\0';
+#if defined(_WIN32)
+    if ((base = getenv("LOCALAPPDATA")) && *base)
+        snprintf(dir, n, "%s\\gnushogi", base);
+#elif defined(__APPLE__)
+    if ((base = getenv("HOME")) && *base)
+        snprintf(dir, n, "%s/Library/Application Support/gnushogi", base);
+#else
+    if ((base = getenv("XDG_STATE_HOME")) && *base == '/')
+        snprintf(dir, n, "%s/gnushogi", base);
+    else if ((base = getenv("HOME")) && *base)
+        snprintf(dir, n, "%s/.local/state/gnushogi", base);
+#endif
+    if (dir[0])
+        av_mkdirs(dir);
+}
+
+static int
+av_same_dir(const char *a, const char *b)
+{
+    struct stat sa, sb;
+
+    if (stat(a, &sa) != 0 || stat(b, &sb) != 0)
+        return 0;
+#ifdef _WIN32
+    {
+        char ra[MAXPATHLEN], rb[MAXPATHLEN];
+        if (!_fullpath(ra, a, sizeof ra) || !_fullpath(rb, b, sizeof rb))
+            return 0;
+        return _stricmp(ra, rb) == 0;
+    }
+#else
+    return sa.st_dev == sb.st_dev && sa.st_ino == sb.st_ino;
+#endif
+}
+
+/* The file name at the end of a path. */
+static const char *
+av_base(const char *path)
+{
+    const char *slash = strrchr(path, '/');
+
+    return slash ? slash + 1 : path;
+}
+
+/* Called once the command line is read: a book given with -b or -B is
+ * left as it is. */
+static void
+av_paths(int book_given, int binbook_given)
+{
+    char exe[MAXPATHLEN], state[MAXPATHLEN], cwd[MAXPATHLEN];
+
+    av_exe_dir(exe, sizeof exe);
+    av_state_dir(state, sizeof state);
+
+    if (!book_given && (bookfile == NULL || access(bookfile, R_OK) != 0)
+        && exe[0]) {
+        snprintf(av_bookpath, sizeof av_bookpath, "%s/%s", exe,
+                 av_base(BOOK));
+        bookfile = av_bookpath;
+    }
+    if (!book_given && !binbook_given && state[0]) {
+        snprintf(av_binbookpath, sizeof av_binbookpath, "%s/%s", state,
+                 av_base(BINBOOK));
+        binbookfile = av_binbookpath;
+    }
+    if (state[0] && exe[0] && getcwd(cwd, sizeof cwd)
+        && av_same_dir(cwd, exe))
+        if (chdir(state) != 0)
+            ; /* stay where we are */
+}
+#endif /* AV_PATHS */
+
+
 void print_arglist(int argc, char **argv)
 {
     int i;
@@ -80,6 +236,9 @@ main (int argc, char **argv)
 #ifdef BINBOOK
                 binbookfile = NULL;
 #endif
+#ifdef AV_PATHS
+                av_book_given = 1;
+#endif
             }
             break;
 
@@ -88,7 +247,12 @@ main (int argc, char **argv)
             argc--;
             argv++;
             if (argc > 0)
+            {
                 binbookfile = argv[0];
+#ifdef AV_PATHS
+                av_binbook_given = 1;
+#endif
+            }
             break;
 #endif
 
@@ -369,6 +533,10 @@ main (int argc, char **argv)
             exit(1);
         }
     }
+
+#ifdef AV_PATHS
+    av_paths(av_book_given, av_binbook_given);
+#endif
 
     if (InitMain() != 0)
         exit(1);
