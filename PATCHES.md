@@ -74,8 +74,9 @@ plays to mate. macOS: not built here.
   (`isupper`, `__darwin_fd_set`, ...) into ordinary external functions in
   every object, and linking `pat2inc` failed on 31 duplicate symbols. The
   hack is gone (the `#ifndef __GNUC__` fallback further down stays), and
-  the three external functions that relied on it, `CB` in `util.c` and
-  `BRLscan` and `KingScan` in `eval.c`, are plain functions now, since a
+  the five external functions that relied on it, `CB` in `util.c`,
+  `BRLscan` and `KingScan` in `eval.c`, and `PromotionPossible` and
+  `GenMoves` in `genmove.c`, are plain functions now, since a
   C99 `inline` external definition with no `extern` declaration emits no
   symbol.
 - The release job publishes when the Linux builds succeed, with macOS

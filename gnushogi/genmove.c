@@ -311,7 +311,7 @@ Link(short side,
 }
 
 
-inline bool
+bool
 PromotionPossible(short color, short f, short t, short p)
 {
     if (color == black)
@@ -1003,7 +1003,7 @@ DontUseMoves(short ply, short n)
  * nextpos else from nextdir.
  */
 
-inline void
+void
 GenMoves(short ply, short sq, short side,
          short xside)
 {
