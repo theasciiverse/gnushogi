@@ -99,7 +99,9 @@ jobs:
           path: dist/*
 
   release:
+    # macOS is released when it builds; Linux must
     needs: [linux, macos]
+    if: ${{ always() && needs.linux.result == 'success' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4

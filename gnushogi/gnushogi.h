@@ -32,8 +32,6 @@
  *
  */
 
-/* Hack for anal-retentive ANSI-compliance if desired: */
-#define inline
 
 /* FIXME: this file needs to be reorganized in some rational manner. */
 

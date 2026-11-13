@@ -816,7 +816,7 @@ value_of_weakest_attacker(long a2)
  * Increment the hung[] array if a pin is found.
  */
 
-inline int
+int
 BRLscan(short sq, short *mob)
 {
 #ifdef SAVE_NEXTPOS
@@ -1082,7 +1082,7 @@ BRLscan(short sq, short *mob)
 
 
 
-inline short
+short
 KingScan(short sq)
 {
     short cnt;

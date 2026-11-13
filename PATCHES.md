@@ -65,3 +65,18 @@ install folder with a fresh state folder; the book loads ("Book used
 5668(8000)"), the binary book and a saved game land in the state folder,
 help, save and quit work. Computer against computer at depth 3 and 4
 plays to mate. macOS: not built here.
+
+## Builds on macOS (written to go upstream)
+
+- `gnushogi.h` began with an unconditional `#define inline` ("Hack for
+  anal-retentive ANSI-compliance"). Defined before the system headers, it
+  turned macOS's inline `<ctype.h>` and `<sys/select.h>` helpers
+  (`isupper`, `__darwin_fd_set`, ...) into ordinary external functions in
+  every object, and linking `pat2inc` failed on 31 duplicate symbols. The
+  hack is gone (the `#ifndef __GNUC__` fallback further down stays), and
+  the three external functions that relied on it, `CB` in `util.c` and
+  `BRLscan` and `KingScan` in `eval.c`, are plain functions now, since a
+  C99 `inline` external definition with no `extern` declaration emits no
+  symbol.
+- The release job publishes when the Linux builds succeed, with macOS
+  added whenever it builds.

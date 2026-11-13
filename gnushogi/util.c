@@ -111,7 +111,7 @@ parse(FILE * fd, unsigned short *mv, char *opening)
  *     each side.
  */
 
-inline unsigned char
+unsigned char
 CB(short sq)
 {
     short i = sq;
